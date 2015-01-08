@@ -49,6 +49,14 @@
 #define ZRTP_AUTHTAG_SK64		0x34
 
 /**
+ * Define different types of crypto functions */
+#define ZRTP_HASH_TYPE				0x01
+#define ZRTP_CIPHERBLOCK_TYPE 		0x02
+#define ZRTP_AUTHTAG_TYPE			0x04
+#define ZRTP_KEYAGREEMENT_TYPE		0x08
+#define ZRTP_SAS_TYPE				0x10
+
+/**
  * Define to give client indication on which srtp secrets are valid when given
  */
 #define ZRTP_SRTP_SECRETS_FOR_SENDER	0x01
@@ -228,6 +236,28 @@ BZRTP_EXPORT void bzrtp_resetSASVerified(bzrtpContext_t *zrtpContext);
  * return 0 on success, error code otherwise
  */
 BZRTP_EXPORT int bzrtp_resetRetransmissionTimer(bzrtpContext_t *zrtpContext, uint32_t selfSSRC);
+
+/**
+ * @brief Get the supported crypto types
+ *
+ * @param[int]		zrtpContext				The ZRTP context we're dealing with
+ * @param[in]		algoType				mapped to defines, must be in [ZRTP_HASH_TYPE, ZRTP_CIPHERBLOCK_TYPE, ZRTP_AUTHTAG_TYPE, ZRTP_KEYAGREEMENT_TYPE or ZRTP_SAS_TYPE]
+ * @param[out]		supportedTypes			mapped to uint8_t value of the 4 char strings giving the available types as string according to rfc section 5.1.2 to 5.1.6
+ *
+ * @return number of available types, 0 on error
+ */
+BZRTP_EXPORT uint8_t bzrtp_getSupportedCryptoTypes(bzrtpContext_t *zrtpContext, uint8_t algoType, uint8_t supportedTypes[7]);
+
+/**
+ * @brief set the supported crypto types
+ *
+ * @param[int/out]	zrtpContext				The ZRTP context we're dealing with
+ * @param[in]		algoType				mapped to defines, must be in [ZRTP_HASH_TYPE, ZRTP_CIPHERBLOCK_TYPE, ZRTP_AUTHTAG_TYPE, ZRTP_KEYAGREEMENT_TYPE or ZRTP_SAS_TYPE]
+ * @param[in]		supportedTypes			mapped to uint8_t value of the 4 char strings giving the available types as string according to rfc section 5.1.2 to 5.1.6
+ * @param[in]		supportedTypesCount		number of supported crypto types
+ */
+BZRTP_EXPORT void bzrtp_setSupportedCryptoTypes(bzrtpContext_t *zrtpContext, uint8_t algoType, uint8_t supportedTypes[7], uint8_t supportedTypesCount);
+
 
 #define BZRTP_CUSTOMCACHE_USEKDF 	1
 #define BZRTP_CUSTOMCACHE_PLAINDATA 0
