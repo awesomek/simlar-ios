@@ -1,0 +1,70 @@
+From dee29a349ade332e51c8869b9c9c49d951de1ac0 Mon Sep 17 00:00:00 2001
+From: Ben Sartor <ben@simlar.org>
+Date: Thu, 22 Jan 2015 18:46:05 +0100
+Subject: [PATCH 11/12] RFC selectCommonAlgo now makes sure to not return an
+ array with more than 7 elements
+
+---
+ include/cryptoUtils.h | 4 ++--
+ src/bzrtp.c           | 1 -
+ src/cryptoUtils.c     | 8 ++++++--
+ 3 files changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/include/cryptoUtils.h b/include/cryptoUtils.h
+index d16761b..34b168c 100644
+--- a/include/cryptoUtils.h
++++ b/include/cryptoUtils.h
+@@ -131,9 +131,9 @@ int updateCryptoFunctionPointers(bzrtpChannelContext_t *zrtpChannelContext);
+  * @param[in]	masterArrayLength	Number of valids element in the master array
+  * @param[in]	slaveArray	 		The available algo, order is not taken in account
+  * @param[in]	slaveArrayLength	Number of valids element in the slave array
+- * @param[out]	commonArray	 		The available algo, order is not taken in account
++ * @param[out]	commonArray	 		Common algorithms found, max size 7
+  *
+- * @return		the number of common algorithm found
++ * @return		the number of common algorithms found
+  */
+ uint8_t selectCommonAlgo(uint8_t masterArray[7], uint8_t masterArrayLength, uint8_t slaveArray[7], uint8_t slaveArrayLength, uint8_t commonArray[7]);
+ 
+diff --git a/src/bzrtp.c b/src/bzrtp.c
+index 0822a71..1244935 100644
+--- a/src/bzrtp.c
++++ b/src/bzrtp.c
+@@ -819,7 +819,6 @@ void bzrtp_setSupportedCryptoTypes(bzrtpContext_t *zrtpContext, uint8_t algoType
+ 		return;
+ 	}
+ 
+-	supportedTypesCount = supportedTypesCount < 7 ? supportedTypesCount : 7;
+ 	implementedTypesCount = bzrtpCrypto_getAvailableCryptoTypes(algoType, implementedTypes);
+ 
+ 	switch(algoType) {
+diff --git a/src/cryptoUtils.c b/src/cryptoUtils.c
+index c9f7b2b..b4f3988 100644
+--- a/src/cryptoUtils.c
++++ b/src/cryptoUtils.c
+@@ -433,9 +433,9 @@ int updateCryptoFunctionPointers(bzrtpChannelContext_t *zrtpChannelContext) {
+  * @param[in]	masterArrayLength	Number of valids element in the master array
+  * @param[in]	slaveArray	 		The available algo, order is not taken in account
+  * @param[in]	slaveArrayLength	Number of valids element in the slave array
+- * @param[out]	commonArray	 		The available algo, order is not taken in account
++ * @param[out]	commonArray	 		Common algorithms found, max size 7
+  *
+- * @return		the number of common algorithm found
++ * @return		the number of common algorithms found
+  */
+ uint8_t selectCommonAlgo(uint8_t masterArray[7], uint8_t masterArrayLength, uint8_t slaveArray[7], uint8_t slaveArrayLength, uint8_t commonArray[7]) {
+ 	int i,j;
+@@ -445,6 +445,10 @@ uint8_t selectCommonAlgo(uint8_t masterArray[7], uint8_t masterArrayLength, uint
+ 			if (masterArray[i] == slaveArray[j]) { /* found one, insert it in the common array */
+ 				commonArray[commonLength] = masterArray[i];
+ 				commonLength++;
++
++				if (commonLength == 7) {
++					return commonLength;
++				}
+ 			}
+ 		}
+ 	}
+-- 
+2.1.4
+

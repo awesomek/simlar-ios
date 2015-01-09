@@ -1,0 +1,34 @@
+From 36e1b3bf2aa26e985d918184de8fb57473e467cc Mon Sep 17 00:00:00 2001
+From: Ben Sartor <ben@simlar.org>
+Date: Fri, 16 Jan 2015 04:44:24 +0100
+Subject: [PATCH 07/12] test now checks for AES3 as default value
+
+---
+ test/bzrtpCryptoTest.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/test/bzrtpCryptoTest.c b/test/bzrtpCryptoTest.c
+index 681ebe1..124ce9e 100644
+--- a/test/bzrtpCryptoTest.c
++++ b/test/bzrtpCryptoTest.c
+@@ -479,7 +479,7 @@ void test_algoAgreement(void) {
+ 	if ((retval==0) 
+ 			&& (zrtpContext->channelContext[0]->keyAgreementAlgo == ZRTP_KEYAGREEMENT_DH3k)
+ 			&& (zrtpContext->channelContext[0]->hashAlgo == ZRTP_HASH_S256)
+-			&& (zrtpContext->channelContext[0]->cipherAlgo == ZRTP_CIPHER_AES1)
++			&& (zrtpContext->channelContext[0]->cipherAlgo == ZRTP_CIPHER_AES3)
+ 			&& (zrtpContext->channelContext[0]->authTagAlgo == ZRTP_AUTHTAG_HS32)
+ 			&& (zrtpContext->channelContext[0]->sasAlgo == ZRTP_SAS_B32)) {
+ 		CU_PASS("Algo agreement test 1");
+@@ -497,7 +497,7 @@ void test_algoAgreement(void) {
+ 	if ((retval==0) 
+ 	&& (zrtpContext->channelContext[0]->keyAgreementAlgo == ZRTP_KEYAGREEMENT_DH2k)
+ 	&& (zrtpContext->channelContext[0]->hashAlgo == ZRTP_HASH_S256)
+-	&& (zrtpContext->channelContext[0]->cipherAlgo == ZRTP_CIPHER_AES1)
++	&& (zrtpContext->channelContext[0]->cipherAlgo == ZRTP_CIPHER_AES3)
+ 	&& (zrtpContext->channelContext[0]->authTagAlgo == ZRTP_AUTHTAG_HS32)
+ 	&& (zrtpContext->channelContext[0]->sasAlgo == ZRTP_SAS_B32)) {
+ 		CU_PASS("Algo agreement test 2");
+-- 
+2.1.4
+

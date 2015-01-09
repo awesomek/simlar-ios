@@ -1,0 +1,25 @@
+From 8fff3834c729521e40b49b48a0cdb2fe43197236 Mon Sep 17 00:00:00 2001
+From: Ben Sartor <ben@simlar.org>
+Date: Thu, 8 Jan 2015 01:54:39 +0100
+Subject: [PATCH 01/12] fixed cipher algorothm type parsing of AES3
+
+---
+ src/cryptoUtils.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/cryptoUtils.c b/src/cryptoUtils.c
+index 0bd9625..3ae04e8 100644
+--- a/src/cryptoUtils.c
++++ b/src/cryptoUtils.c
+@@ -482,7 +482,7 @@ uint8_t cryptoAlgoTypeStringToInt(uint8_t algoType[4], uint8_t algoFamily) {
+ 					return ZRTP_CIPHER_AES1;
+ 				} else if (memcmp(algoType, "AES2", 4) == 0) {
+ 					return ZRTP_CIPHER_AES2;
+-				} else if (memcmp(algoType, "AES2", 4) == 0) {
++				} else if (memcmp(algoType, "AES3", 4) == 0) {
+ 					return ZRTP_CIPHER_AES3;
+ 				} else if (memcmp(algoType, "2FS1", 4) == 0) {
+ 					return ZRTP_CIPHER_2FS1;
+-- 
+2.1.4
+

@@ -1,0 +1,30 @@
+From 49b05c513b02ba2eaad4f6401c2ba4c55b328ffb Mon Sep 17 00:00:00 2001
+From: Ben Sartor <ben@simlar.org>
+Date: Fri, 16 Jan 2015 01:35:40 +0100
+Subject: [PATCH 06/12] reactivated tests suites of Crypto Wrappers and Crypto
+ Utils
+
+---
+ test/bzrtpTest.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/test/bzrtpTest.c b/test/bzrtpTest.c
+index 2dead22..a809d16 100644
+--- a/test/bzrtpTest.c
++++ b/test/bzrtpTest.c
+@@ -66,10 +66,10 @@ int main(int argc, char *argv[] ) {
+ 	CU_add_test(parserTestSuite, "State machine", test_stateMachine);
+ 
+ 	/* Run all suites */
+-/*	printf("\n\n#### Run the Bzrtp Crypto Wrappers tests suite\n");
++	printf("\n\n#### Run the Bzrtp Crypto Wrappers tests suite\n");
+ 	CU_basic_run_suite(cryptoWrapperTestSuite);
+ 	printf("\n\n#### Run the Bzrtp Crypto Utils tests suite\n");
+-	CU_basic_run_suite(cryptoUtilsTestSuite);*/
++	CU_basic_run_suite(cryptoUtilsTestSuite);
+ 	printf("\n\n#### Run the Bzrtp ZRTP Packet Parser tests suite\n");
+ 	CU_basic_run_suite(parserTestSuite);
+ 
+-- 
+2.1.4
+

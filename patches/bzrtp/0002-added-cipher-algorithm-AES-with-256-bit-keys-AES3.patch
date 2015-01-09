@@ -1,0 +1,156 @@
+From fdbea25a0a95a14d0e92c3d1d5faee34d0ff8d9f Mon Sep 17 00:00:00 2001
+From: Ben Sartor <ben@simlar.org>
+Date: Tue, 6 Jan 2015 04:03:08 +0100
+Subject: [PATCH 02/12] added cipher algorithm AES with 256-bit keys (AES3)
+
+---
+ include/cryptoWrapper.h | 34 ++++++++++++++++++++++++++
+ src/cryptoPolarssl.c    | 63 +++++++++++++++++++++++++++++++++++++++++++++++--
+ src/cryptoUtils.c       |  5 ++++
+ 3 files changed, 100 insertions(+), 2 deletions(-)
+
+diff --git a/include/cryptoWrapper.h b/include/cryptoWrapper.h
+index f02afb1..7e713c4 100644
+--- a/include/cryptoWrapper.h
++++ b/include/cryptoWrapper.h
+@@ -208,6 +208,40 @@ void bzrtpCrypto_aes128CfbDecrypt(const uint8_t *key,
+ 		uint8_t *output);
+ 
+ /**
++ * @brief Wrapper for AES-256 in CFB128 mode encryption
++ * The key must be 32 bytes long and the IV must be 16 bytes long
++ *
++ * @param[in]	key			encryption key, 256 bits long
++ * @param[in]	IV			Initialisation vector, 128 bits long, is not modified by this function.
++ * @param[in]	input		Input data buffer
++ * @param[in]	inputLength	Input data length
++ * @param[out]	output		Output data buffer
++ *
++ */
++void bzrtpCrypto_aes256CfbEncrypt(const uint8_t *key,
++		const uint8_t *IV,
++		const uint8_t *input,
++		size_t inputLength,
++		uint8_t *output);
++
++/**
++ * @brief Wrapper for AES-256 in CFB128 mode decryption
++ * The key must be 32 bytes long and the IV must be 16 bytes long
++ *
++ * @param[in]	key			decryption key, 256 bits long
++ * @param[in]	IV			Initialisation vector, 128 bits long, is not modified by this function.
++ * @param[in]	input		Input data buffer
++ * @param[in]	inputLength	Input data length
++ * @param[out]	output		Output data buffer
++ *
++ */
++void bzrtpCrypto_aes256CfbDecrypt(const uint8_t *key,
++		const uint8_t *IV,
++		const uint8_t *input,
++		size_t inputLength,
++		uint8_t *output);
++
++/**
+  * @brief Context for the Diffie-Hellman-Merkle key exchange
+  *	ZRTP specifies the use of RFC3526 values for G and P so we do not need to store them in this context
+  */
+diff --git a/src/cryptoPolarssl.c b/src/cryptoPolarssl.c
+index 486971a..e279d80 100644
+--- a/src/cryptoPolarssl.c
++++ b/src/cryptoPolarssl.c
+@@ -57,8 +57,9 @@ uint8_t bzrtpCrypto_getAvailableCryptoTypes(uint8_t algoType, uint8_t availableT
+ 			return 1;
+ 			break;
+ 		case ZRTP_CIPHERBLOCK_TYPE:
+-			availableTypes[0] = ZRTP_CIPHER_AES1;
+-			return 1;
++			availableTypes[0] = ZRTP_CIPHER_AES3;
++			availableTypes[1] = ZRTP_CIPHER_AES1;
++			return 2;
+ 			break;
+ 		case ZRTP_AUTHTAG_TYPE:
+ 			availableTypes[0] = ZRTP_AUTHTAG_HS32;
+@@ -300,6 +301,64 @@ void bzrtpCrypto_aes128CfbDecrypt(const uint8_t key[16],
+ 	aes_crypt_cfb128 (&context, AES_DECRYPT, inputLength, &iv_offset, IVbuffer, input, output);
+ }
+ 
++/*
++ * @brief Wrapper for AES-256 in CFB128 mode encryption
++ * The key must be 32 bytes long and the IV must be 16 bytes long, IV is not updated
++ *
++ * @param[in]	key			encryption key, 256 bits long
++ * @param[in]	IV			Initialisation vector, 128 bits long, is not modified by this function.
++ * @param[in]	input		Input data buffer
++ * @param[in]	inputLength	Input data length
++ * @param[out]	output		Output data buffer
++ *
++ */
++void bzrtpCrypto_aes256CfbEncrypt(const uint8_t key[32],
++		const uint8_t IV[16],
++		const uint8_t *input,
++		size_t inputLength,
++		uint8_t *output)
++{
++	uint8_t IVbuffer[16];
++	size_t iv_offset=0;
++	aes_context context;
++
++	memcpy(IVbuffer, IV, 16*sizeof(uint8_t));
++	memset (&context, 0, sizeof(aes_context));
++	aes_setkey_enc(&context, key, 256);
++
++	/* encrypt */
++	aes_crypt_cfb128 (&context, AES_ENCRYPT, inputLength, &iv_offset, IVbuffer, input, output);
++}
++
++/*
++ * @brief Wrapper for AES-256 in CFB128 mode decryption
++ * The key must be 32 bytes long and the IV must be 16 bytes long, IV is not updated
++ *
++ * @param[in]	key			decryption key, 256 bits long
++ * @param[in]	IV			Initialisation vector, 128 bits long, is not modified by this function.
++ * @param[in]	input		Input data buffer
++ * @param[in]	inputLength	Input data length
++ * @param[out]	output		Output data buffer
++ *
++ */
++void bzrtpCrypto_aes256CfbDecrypt(const uint8_t key[32],
++		const uint8_t IV[16],
++		const uint8_t *input,
++		size_t inputLength,
++		uint8_t *output)
++{
++	uint8_t IVbuffer[16];
++	size_t iv_offset=0;
++	aes_context context;
++
++	memcpy(IVbuffer, IV, 16*sizeof(uint8_t));
++	memset (&context, 0, sizeof(aes_context));
++	aes_setkey_enc(&context, key, 256);
++
++	/* decrypt */
++	aes_crypt_cfb128 (&context, AES_DECRYPT, inputLength, &iv_offset, IVbuffer, input, output);
++}
++
+ /*** End of code common to polarSSL version 1.2 and 1.3 ***/
+ 
+ /* check polarssl version */
+diff --git a/src/cryptoUtils.c b/src/cryptoUtils.c
+index 3ae04e8..6958b7b 100644
+--- a/src/cryptoUtils.c
++++ b/src/cryptoUtils.c
+@@ -382,6 +382,11 @@ int updateCryptoFunctionPointers(bzrtpChannelContext_t *zrtpChannelContext) {
+ 			zrtpChannelContext->cipherDecryptionFunction = bzrtpCrypto_aes128CfbDecrypt;
+ 			zrtpChannelContext->cipherKeyLength = 16;
+ 			break;
++		case ZRTP_CIPHER_AES3 :
++			zrtpChannelContext->cipherEncryptionFunction = bzrtpCrypto_aes256CfbEncrypt;
++			zrtpChannelContext->cipherDecryptionFunction = bzrtpCrypto_aes256CfbDecrypt;
++			zrtpChannelContext->cipherKeyLength = 32;
++			break;
+ 		case ZRTP_UNSET_ALGO :
+ 			zrtpChannelContext->cipherEncryptionFunction = NULL;
+ 			zrtpChannelContext->cipherDecryptionFunction = NULL;
+-- 
+2.1.4
+

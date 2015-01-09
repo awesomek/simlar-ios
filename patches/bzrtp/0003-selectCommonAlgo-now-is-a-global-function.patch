@@ -1,0 +1,53 @@
+From 1815fa7751bb9baa19e130f9c7aba9c70a422497 Mon Sep 17 00:00:00 2001
+From: Ben Sartor <ben@simlar.org>
+Date: Thu, 15 Jan 2015 22:52:40 +0100
+Subject: [PATCH 03/12] selectCommonAlgo now is a global function
+
+---
+ include/cryptoUtils.h | 15 +++++++++++++++
+ src/cryptoUtils.c     |  3 ---
+ 2 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/include/cryptoUtils.h b/include/cryptoUtils.h
+index 7a90755..d16761b 100644
+--- a/include/cryptoUtils.h
++++ b/include/cryptoUtils.h
+@@ -123,6 +123,21 @@ int crypoAlgoAgreement(bzrtpContext_t *zrtpContext, bzrtpChannelContext_t *zrtpC
+ int updateCryptoFunctionPointers(bzrtpChannelContext_t *zrtpChannelContext);
+ 
+ /**
++ * @brief Select common algorithm from the given array where algo are represented by their 4 chars string defined in rfc section 5.1.2 to 5.1.6
++ * Master array is the one given the preference order
++ * All algo are designed by their uint8_t mapped values
++ *
++ * @param[in]	masterArray	 		The ordered available algo, result will follow this ordering
++ * @param[in]	masterArrayLength	Number of valids element in the master array
++ * @param[in]	slaveArray	 		The available algo, order is not taken in account
++ * @param[in]	slaveArrayLength	Number of valids element in the slave array
++ * @param[out]	commonArray	 		The available algo, order is not taken in account
++ *
++ * @return		the number of common algorithm found
++ */
++uint8_t selectCommonAlgo(uint8_t masterArray[7], uint8_t masterArrayLength, uint8_t slaveArray[7], uint8_t slaveArrayLength, uint8_t commonArray[7]);
++
++/**
+  * @brief Map the string description of algo type to an int defined in cryptoWrapper.h
+  *
+  * @param[in] algoType		A 4 chars string containing the algo type as listed in rfc sections 5.1.2 to 5.1.6
+diff --git a/src/cryptoUtils.c b/src/cryptoUtils.c
+index 6958b7b..c9f7b2b 100644
+--- a/src/cryptoUtils.c
++++ b/src/cryptoUtils.c
+@@ -32,9 +32,6 @@
+ #include "cryptoUtils.h"
+ #include "cryptoWrapper.h"
+ 
+-/* local function prototype */
+-uint8_t selectCommonAlgo(uint8_t masterArray[7], uint8_t masterArrayLength, uint8_t slaveArray[7], uint8_t slaveArrayLength, uint8_t commonArray[7]);
+-
+ 
+ int bzrtp_keyDerivationFunction(uint8_t *key, uint16_t keyLength,
+ 		uint8_t *label, uint16_t labelLength,
+-- 
+2.1.4
+

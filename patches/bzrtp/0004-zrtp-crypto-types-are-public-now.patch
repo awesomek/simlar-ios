@@ -1,0 +1,50 @@
+From d5e3e6285715640af6a2d13369219c09b2d44059 Mon Sep 17 00:00:00 2001
+From: Ben Sartor <ben@simlar.org>
+Date: Thu, 15 Jan 2015 23:35:12 +0100
+Subject: [PATCH 04/12] zrtp crypto types are public now
+
+---
+ include/bzrtp/bzrtp.h   | 8 ++++++++
+ include/cryptoWrapper.h | 7 -------
+ 2 files changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/include/bzrtp/bzrtp.h b/include/bzrtp/bzrtp.h
+index 1b96237..8262451 100644
+--- a/include/bzrtp/bzrtp.h
++++ b/include/bzrtp/bzrtp.h
+@@ -49,6 +49,14 @@
+ #define ZRTP_AUTHTAG_SK64		0x34
+ 
+ /**
++ * Define different types of crypto functions */
++#define ZRTP_HASH_TYPE				0x01
++#define ZRTP_CIPHERBLOCK_TYPE 		0x02
++#define ZRTP_AUTHTAG_TYPE			0x04
++#define ZRTP_KEYAGREEMENT_TYPE		0x08
++#define ZRTP_SAS_TYPE				0x10
++
++/**
+  * Define to give client indication on which srtp secrets are valid when given
+  */
+ #define ZRTP_SRTP_SECRETS_FOR_SENDER	0x01
+diff --git a/include/cryptoWrapper.h b/include/cryptoWrapper.h
+index 7e713c4..75c2b5e 100644
+--- a/include/cryptoWrapper.h
++++ b/include/cryptoWrapper.h
+@@ -35,13 +35,6 @@
+ #include <stdint.h>
+ #include "bzrtp/bzrtp.h"
+ 
+-/* define different types of crypto functions */
+-#define ZRTP_HASH_TYPE				0x01
+-#define ZRTP_CIPHERBLOCK_TYPE 		0x02
+-#define ZRTP_AUTHTAG_TYPE			0x04
+-#define ZRTP_KEYAGREEMENT_TYPE		0x08
+-#define ZRTP_SAS_TYPE				0x10
+-
+ /* map the differents algorithm (some may not be available) to integer */
+ 
+ #define	ZRTP_HASH_S256			0x11
+-- 
+2.1.4
+

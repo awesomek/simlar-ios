@@ -1,0 +1,84 @@
+From 6a115a865560dce69f726e07cb07c739624e9595 Mon Sep 17 00:00:00 2001
+From: Ben Sartor <ben@simlar.org>
+Date: Thu, 22 Jan 2015 18:59:55 +0100
+Subject: [PATCH 12/12] RFC selectCommonAlgo now prevents adding the same
+ element twice
+
+---
+ src/cryptoUtils.c      | 24 ++++++++++++++++--------
+ test/bzrtpCryptoTest.c |  8 ++++----
+ 2 files changed, 20 insertions(+), 12 deletions(-)
+
+diff --git a/src/cryptoUtils.c b/src/cryptoUtils.c
+index b4f3988..a2dafc2 100644
+--- a/src/cryptoUtils.c
++++ b/src/cryptoUtils.c
+@@ -438,17 +438,25 @@ int updateCryptoFunctionPointers(bzrtpChannelContext_t *zrtpChannelContext) {
+  * @return		the number of common algorithms found
+  */
+ uint8_t selectCommonAlgo(uint8_t masterArray[7], uint8_t masterArrayLength, uint8_t slaveArray[7], uint8_t slaveArrayLength, uint8_t commonArray[7]) {
+-	int i,j;
++	int i;
+ 	uint8_t commonLength = 0;
++	const int bitsProInt = 8*sizeof(int);
++	const int algosBitmapSize = 256/bitsProInt;
++	int algosBitmap[algosBitmapSize];
++
++	memset(algosBitmap, 0, sizeof(int)*algosBitmapSize);
++	for (i=0; i<slaveArrayLength; i++) {
++		algosBitmap[slaveArray[i]/bitsProInt] = algosBitmap[slaveArray[i]/bitsProInt] | 1 << (slaveArray[i] % bitsProInt);
++	}
++
+ 	for (i=0; i<masterArrayLength; i++) {
+-		for(j=0; j<slaveArrayLength; j++) {
+-			if (masterArray[i] == slaveArray[j]) { /* found one, insert it in the common array */
+-				commonArray[commonLength] = masterArray[i];
+-				commonLength++;
++		if (algosBitmap[masterArray[i]/bitsProInt] & (1 << (masterArray[i] % bitsProInt))) {
++			algosBitmap[masterArray[i]/bitsProInt] ^= 1 << (masterArray[i] % bitsProInt);
++			commonArray[commonLength] = masterArray[i];
++			commonLength++;
+ 
+-				if (commonLength == 7) {
+-					return commonLength;
+-				}
++			if (commonLength == 7) {
++				return commonLength;
+ 			}
+ 		}
+ 	}
+diff --git a/test/bzrtpCryptoTest.c b/test/bzrtpCryptoTest.c
+index 1f8c6d2..605c036 100644
+--- a/test/bzrtpCryptoTest.c
++++ b/test/bzrtpCryptoTest.c
+@@ -645,15 +645,15 @@ void test_algoSetterGetter(void) {
+ 
+ 	CU_TEST(testAlgoSetterGetter(ZRTP_KEYAGREEMENT_TYPE, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH2k}, 2, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH2k}, 2));
+ 	CU_TEST(testAlgoSetterGetter(ZRTP_KEYAGREEMENT_TYPE, (uint8_t []){ZRTP_KEYAGREEMENT_DH2k, ZRTP_KEYAGREEMENT_DH3k}, 2, (uint8_t []){ZRTP_KEYAGREEMENT_DH2k, ZRTP_KEYAGREEMENT_DH3k}, 2));
+-	CU_TEST(testAlgoSetterGetter(ZRTP_KEYAGREEMENT_TYPE, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k}, 2, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k}, 2));
++	CU_TEST(testAlgoSetterGetter(ZRTP_KEYAGREEMENT_TYPE, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k}, 2, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k}, 1));
+ 	CU_TEST(testAlgoSetterGetter(ZRTP_KEYAGREEMENT_TYPE, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_EC25}, 2, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k}, 1));
+ 	CU_TEST(testAlgoSetterGetter(ZRTP_KEYAGREEMENT_TYPE, (uint8_t []){ZRTP_KEYAGREEMENT_EC25, ZRTP_KEYAGREEMENT_DH3k}, 2, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k}, 1));
+ 	CU_TEST(testAlgoSetterGetter(ZRTP_KEYAGREEMENT_TYPE, (uint8_t []){ZRTP_KEYAGREEMENT_EC25, ZRTP_KEYAGREEMENT_EC52}, 2, NULL, 0));
+ 
+ 	CU_TEST(testAlgoSetterGetter(ZRTP_KEYAGREEMENT_TYPE, (uint8_t []){ZRTP_KEYAGREEMENT_EC52, ZRTP_KEYAGREEMENT_EC25, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH2k}, 4, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH2k}, 2));
+ 	CU_TEST(testAlgoSetterGetter(ZRTP_KEYAGREEMENT_TYPE, (uint8_t []){ZRTP_KEYAGREEMENT_Prsh, ZRTP_KEYAGREEMENT_EC52, ZRTP_KEYAGREEMENT_EC38, ZRTP_KEYAGREEMENT_EC25, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH2k}, 6, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH2k}, 2));
+-	CU_TEST(testAlgoSetterGetter(ZRTP_KEYAGREEMENT_TYPE, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH2k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH2k}, 4, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH2k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH2k}, 4));
+-	CU_TEST(testAlgoSetterGetter(ZRTP_KEYAGREEMENT_TYPE, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k}, 8, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k}, 7));
++	CU_TEST(testAlgoSetterGetter(ZRTP_KEYAGREEMENT_TYPE, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH2k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH2k}, 4, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH2k}, 2));
++	CU_TEST(testAlgoSetterGetter(ZRTP_KEYAGREEMENT_TYPE, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k, ZRTP_KEYAGREEMENT_DH3k}, 8, (uint8_t []){ZRTP_KEYAGREEMENT_DH3k}, 1));
+ 
+ 	/// cipher type
+ 	CU_TEST(testAlgoSetterGetter(ZRTP_CIPHERBLOCK_TYPE, (uint8_t []){ZRTP_CIPHER_AES1}, 1, (uint8_t []){ZRTP_CIPHER_AES1}, 1));
+@@ -663,7 +663,7 @@ void test_algoSetterGetter(void) {
+ 	CU_TEST(testAlgoSetterGetter(ZRTP_CIPHERBLOCK_TYPE, (uint8_t []){ZRTP_CIPHER_2FS2}, 1, NULL, 0));
+ 	CU_TEST(testAlgoSetterGetter(ZRTP_CIPHERBLOCK_TYPE, (uint8_t []){ZRTP_CIPHER_2FS3}, 1, NULL, 0));
+ 
+-	CU_TEST(testAlgoSetterGetter(ZRTP_CIPHERBLOCK_TYPE, (uint8_t []){ZRTP_CIPHER_AES3, ZRTP_CIPHER_AES3}, 2, (uint8_t []){ZRTP_CIPHER_AES3, ZRTP_CIPHER_AES3}, 2));
++	CU_TEST(testAlgoSetterGetter(ZRTP_CIPHERBLOCK_TYPE, (uint8_t []){ZRTP_CIPHER_AES3, ZRTP_CIPHER_AES3}, 2, (uint8_t []){ZRTP_CIPHER_AES3}, 1));
+ 	CU_TEST(testAlgoSetterGetter(ZRTP_CIPHERBLOCK_TYPE, (uint8_t []){ZRTP_CIPHER_AES3, ZRTP_CIPHER_AES1}, 2, (uint8_t []){ZRTP_CIPHER_AES3, ZRTP_CIPHER_AES1}, 2));
+ 	CU_TEST(testAlgoSetterGetter(ZRTP_CIPHERBLOCK_TYPE, (uint8_t []){ZRTP_CIPHER_AES1, ZRTP_CIPHER_AES3}, 2, (uint8_t []){ZRTP_CIPHER_AES1, ZRTP_CIPHER_AES3}, 2));
+ 	CU_TEST(testAlgoSetterGetter(ZRTP_CIPHERBLOCK_TYPE, (uint8_t []){ZRTP_CIPHER_AES1, ZRTP_CIPHER_AES2}, 2, (uint8_t []){ZRTP_CIPHER_AES1}, 1));
+-- 
+2.1.4
+
