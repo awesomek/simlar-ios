@@ -1,4 +1,4 @@
-simlar-ios
+simlar-ios:debug
 ==========
 
 Simlar for iOS
